@@ -13,6 +13,7 @@ public class GraphicObjectManager {
     private Map<Integer, GraphicObject> objects = new HashMap<>();
     private Map<Integer, GraphicObject> objectsRemoved = new HashMap<>();
     private Map<Integer, GroupObject> groups = new HashMap<>();
+
     private AtomicInteger ObjectnextId = new AtomicInteger(1); // Id che inizia da 1 per tutti gli oggetti
     private int GroupNextId = 1000;
 
@@ -45,13 +46,20 @@ public class GraphicObjectManager {
                 gpanel.repaint();
                 System.out.println("Removed group with ID " + id);
             } else if (id < 1000) {
-
                 gpanel.remove(obj);
                 objectsRemoved.put(id, obj);
                 objects.remove(id);
                 gpanel.repaint();
                 System.out.println("Removed object with ID " + id);
             }
+
+            // Decrement ObjectNextId if the removed ID was the latest one assigned
+            synchronized (ObjectnextId) {
+                if (id == ObjectnextId.get() - 1) {
+                    ObjectnextId.decrementAndGet();
+                }
+            }
+
             return true;
         }
         System.out.println("No object found with ID " + id);
@@ -106,6 +114,7 @@ public class GraphicObjectManager {
         if (objects.containsKey(groupId) && objects.get(groupId) instanceof GroupObject) {
             objectsRemoved.put(groupId, objects.get(groupId));
             objects.remove(groupId);
+            GroupNextId--;
             System.out.println("Group with ID " + groupId + " removed.");
             return true;
         }
